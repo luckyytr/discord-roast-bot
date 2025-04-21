@@ -1,0 +1,43 @@
+import discord
+from discord import app_commands
+import openai
+import os
+
+# Setup for your bot and OpenAI
+intents = discord.Intents.default()
+client = discord.Client(intents=intents)
+openai.api_key = 'your-openai-api-key'
+
+# This is for when the bot is ready
+@client.event
+async def on_ready():
+    print(f'We have logged in as {client.user}')
+    # Registering the slash commands
+    client.tree.sync()
+
+# The roast command
+@client.tree.command(name='roast', description='Get a savage roast from the bot')
+async def roast(interaction: discord.Interaction, user: discord.User = None):
+    if user:
+        text = f"Roast {user.name}"
+    else:
+        text = "Roast yourself"
+    
+    # Call OpenAI API to generate a roast
+    try:
+        response = openai.Completion.create(
+            model="text-davinci-003",  # You can choose different models like GPT-4 here
+            prompt=f"Roast this person: {text}",
+            temperature=0.7,
+            max_tokens=50
+        )
+        
+        roast = response.choices[0].text.strip()
+        await interaction.response.send_message(roast)
+
+    except Exception as e:
+        print(e)
+        await interaction.response.send_message("Oops, something went wrong while generating the roast. Try again later!")
+
+# Run the bot
+client.run('your-discord-bot-token')
